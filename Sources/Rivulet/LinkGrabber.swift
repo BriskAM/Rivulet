@@ -134,9 +134,18 @@ final class LinkGrabber {
             let dir = usePackageFolder ? (base as NSString).appendingPathComponent(Self.safeFolderName(pkg.name)) : base
             return (dir, selected)
         }
+        let engine = Automation.shared.resolver
         state.perform { client in
             for (dir, items) in jobs {
-                for item in items {
+                for listed in items {
+                    // Entries that are still page links (listed albums) are resolved now, when the signed link is fresh.
+                    var item = listed
+                    if let u = URL(string: listed.link.url), engine.plugin(matching: u) != nil {
+                        let resolved = await engine.resolve(listed.link.url).flatMap(\.links)
+                        guard var first = resolved.first, first.status != .offline, first.url != listed.link.url else { continue }
+                        if first.fileName == nil { first.fileName = listed.link.fileName }
+                        item.link = first
+                    }
                     var options: [String: Any] = ["dir": dir]
                     if paused { options["pause"] = "true" }
                     if let name = item.link.fileName, Self.isPlainName(name) { options["out"] = name }

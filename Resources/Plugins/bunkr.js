@@ -7,8 +7,8 @@
 //   4. GET <signUrl>?path=<path> returns {token, ex}; the final URL is mediafiles + path + ?n=..&token=..&ex=..
 // This plugin does not solve captchas, does not use accounts and does not try to get around rate
 // limits or access controls. If the site starts requiring any of that, the plugin will simply fail.
-// Pagination of very large albums (?page=N) is implemented from the link structure but was NOT
-// verified against a live multi page album.
+// Albums are listed page by page (?page=N, verified on a 53 page album); each file is resolved when its
+// download starts.
 //
 // Bunkr domains change often: edit HOSTS below (the `match` list is generated from it).
 const HOSTS = ["bunkr.si", "bunkr.la", "bunkr.cr", "bunkr.ph", "bunkr.ru", "bunkr.is", "bunkr.fi",
@@ -29,19 +29,17 @@ const DEFAULT_SIGN_URL = "https://glb-apisign.cdn.cr/sign";
     return { links: [await this.file(url, origin, hdr)] };
   },
 
+  // Large albums (hundreds of files over many pages) are listed, not resolved: every entry is returned as
+  // its own file page link (name and size from the listing) and Rivulet resolves it just before it starts
+  // downloading, because the final download links are signed and expire.
   async album(url, origin, hdr) {
     const albumURL = url.replace(/[?#].*$/, "");
     const items = [];
     const seen = {};
     let title = null;
-    for (let page = 1; page <= 50; page++) {
-      const res = await http.get(page === 1 ? albumURL : albumURL + "?page=" + page, { headers: hdr });
-      if (res.status >= 400) { if (page === 1) throw new Error("album not found (HTTP " + res.status + ")"); break; }
-      const html = res.body;
-      if (page === 1) {
-        const t = html.match(/<h1[^>]*>([^<]+)<\/h1>/) || html.match(/og:title" content="([^"]+)"/);
-        if (t) title = util.decodeEntities(t[1].trim());
-      }
+    let lastPage = 1;
+    const started = Date.now();
+    const parse = (html, base) => {
       let added = 0;
       const parts = html.split(/class="[^"]*\btheItem\b[^"]*"/).slice(1);
       for (const part of parts) {
@@ -52,34 +50,33 @@ const DEFAULT_SIGN_URL = "https://glb-apisign.cdn.cr/sign";
         const nm = part.match(/class="[^"]*theName[^"]*"[^>]*>([^<]+)</);
         const sz = part.match(/class="[^"]*theSize[^"]*"[^>]*>([^<]+)</);
         items.push({
-          page: util.absoluteURL(res.url, href[1]),
+          url: util.absoluteURL(base, href[1]),
           name: nm ? util.decodeEntities(nm[1].trim()) : null,
-          size: sz ? util.sizeFromString(util.decodeEntities(sz[1].trim())) : null
+          size: sz ? util.sizeFromString(util.decodeEntities(sz[1].trim())) : null,
+          status: "online"
         });
       }
-      const hasNext = new RegExp('href="[^"]*[?&]page=' + (page + 1) + '[^0-9]').test(html);
-      if (!added || !hasNext) break;
+      return added;
+    };
+    const first = await http.get(albumURL, { headers: hdr });
+    if (first.status >= 400) throw new Error("album not found (HTTP " + first.status + ")");
+    const t = first.body.match(/<h1[^>]*>([^<]+)<\/h1>/) || first.body.match(/og:title" content="([^"]+)"/);
+    if (t) title = util.decodeEntities(t[1].trim());
+    const nums = (first.body.match(/[?&]page=\d+/g) || []).map(m => parseInt(m.replace(/\D/g, ""), 10));
+    if (nums.length) lastPage = Math.min(Math.max.apply(null, nums), 300);
+    parse(first.body, first.url);
+    // Remaining pages, four at a time, in order, within a time budget.
+    for (let page = 2; page <= lastPage; page += 4) {
+      if (Date.now() - started > 22000) { log("time budget reached after " + (page - 1) + " of " + lastPage + " pages"); break; }
+      const nums2 = [];
+      for (let k = page; k < page + 4 && k <= lastPage; k++) nums2.push(k);
+      const got = await Promise.all(nums2.map(n => http.get(albumURL + "?page=" + n, { headers: hdr }).catch(() => http.get(albumURL + "?page=" + n, { headers: hdr })).catch(() => null)));
+      let any = false;
+      got.forEach((r, k) => { if (r && r.status < 400 && parse(r.body, r.url) > 0) any = true; else log("page " + nums2[k] + " empty or failed"); });
+      if (!any) break;
     }
     if (!items.length) throw new Error("no files found in album");
-
-    // Resolve each file (3 requests per file) within the time budget; 3 at a time.
-    const started = Date.now();
-    const links = [];
-    let skipped = 0;
-    for (let i = 0; i < items.length; i += 3) {
-      if (Date.now() - started > 22000) { skipped = items.length - i; break; }
-      const batch = items.slice(i, i + 3);
-      const done = await Promise.all(batch.map(it =>
-        this.file(it.page, origin, hdr).catch(e => { log("skip " + (it.name || it.page) + ": " + e.message); return null; })));
-      done.forEach((l, k) => {
-        if (!l) return;
-        if (batch[k].name) l.name = batch[k].name;
-        if (batch[k].size) l.size = batch[k].size;
-        links.push(l);
-      });
-    }
-    if (skipped) log("time budget reached, " + skipped + " files not resolved; resolve the album again");
-    return { packageName: title, links: links };
+    return { packageName: title, links: items };
   },
 
   async file(pageURL, origin, hdr) {

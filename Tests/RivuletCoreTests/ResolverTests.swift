@@ -336,13 +336,13 @@ struct ResolverTests {
     @Test func linkCountAndSchemeAreLimited() async {
         let dir = tempDir()
         writePlugin(dir, "t.js", simplePlugin(id: "t", match: "^https://many\\\\.test/", body: """
-        const links = []; for (let i = 0; i < 6000; i++) links.push({ url: "https://x.test/" + i });
+        const links = []; for (let i = 0; i < 12000; i++) links.push({ url: "https://x.test/" + i });
         links.push({ url: "javascript:alert(1)" }); links.unshift({ url: "ftp://nope" });
         return { links };
         """))
         let engine = ResolverEngine(pluginDirectories: [dir])
         let r = await engine.resolve("https://many.test/x")
-        #expect(r.first?.links.count == 5000)
+        #expect(r.first?.links.count == ResolverLimits.maxLinks)
         #expect(r.first?.links.first?.url == "https://x.test/0")
     }
 

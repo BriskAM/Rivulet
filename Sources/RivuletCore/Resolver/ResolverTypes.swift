@@ -57,7 +57,7 @@ public struct PluginInfo: Identifiable, Sendable {
 
 public enum ResolverLimits {
     public static let resolveTimeout: TimeInterval = 30
-    public static let maxLinks = 5000
+    public static let maxLinks = 10000
     public static let maxBodyBytes = 8 * 1024 * 1024
 }
 

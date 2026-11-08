@@ -1,0 +1,113 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f5f5f7;
+  --group: #ffffff;
+  --text: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --separator: rgba(60, 60, 67, 0.18);
+  --field: #ffffff;
+  --field-border: rgba(60, 60, 67, 0.3);
+  --accent: #0a84ff;
+  --accent-text: #ffffff;
+  --good: #248a3d;
+  --bad: #d70015;
+  --radius: 10px;
+  --font: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+}
+
+@supports (color: AccentColor) {
+  :root {
+    --accent: AccentColor;
+    --accent-text: AccentColorText;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e1e;
+    --group: #2a2a2c;
+    --text: #f5f5f7;
+    --text-secondary: #98989d;
+    --separator: rgba(235, 235, 245, 0.16);
+    --field: #1e1e1e;
+    --field-border: rgba(235, 235, 245, 0.25);
+    --good: #32d74b;
+    --bad: #ff453a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.4 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+main { max-width: 560px; margin: 0 auto; padding: 32px 20px 48px; }
+
+h1 { font-size: 22px; font-weight: 700; margin: 0; }
+.subtitle { margin: 2px 0 20px; color: var(--text-secondary); }
+h2 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin: 24px 0 6px 12px;
+}
+
+.group {
+  background: var(--group);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.row { display: block; padding: 10px 14px; }
+.row + .row { border-top: 1px solid var(--separator); }
+.row-title { display: block; font-weight: 500; }
+.hint { display: block; margin-top: 3px; color: var(--text-secondary); font-size: 12px; }
+
+.row.switch { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.row.switch input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.row-text { display: block; }
+
+.row.field .row-title { margin-bottom: 5px; }
+input[type="text"], input[type="url"], input[type="password"], input[type="number"], textarea {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+textarea { resize: vertical; }
+input::placeholder, textarea::placeholder { color: var(--text-secondary); opacity: 0.8; }
+input:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--group);
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+  padding: 5px 14px;
+  cursor: default;
+}
+button:hover { filter: brightness(0.96); }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+
+.result { margin-left: 10px; font-size: 12px; word-break: break-word; }
+.result.good { color: var(--good); }
+.result.bad { color: var(--bad); }
+
+.save-row { margin-top: 22px; display: flex; align-items: center; }
+.save-row .result { margin-left: 12px; }

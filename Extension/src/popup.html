@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rivulet</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="status">
+      <span id="dot" class="dot" aria-hidden="true"></span>
+      <span id="status-text">Connecting...</span>
+    </div>
+    <button id="settings" class="link" type="button">Settings</button>
+  </header>
+
+  <section class="speeds" id="speeds" hidden>
+    <div><span class="label">Down</span> <span id="down">0 B/s</span></div>
+    <div><span class="label">Up</span> <span id="up">0 B/s</span></div>
+    <div><span class="label">Active</span> <span id="counts">0</span></div>
+  </section>
+
+  <div id="message" class="message" hidden></div>
+
+  <ul id="list" class="list"></ul>
+  <p id="empty" class="empty" hidden>No active or waiting downloads.</p>
+
+  <footer>
+    <label class="toggle">
+      <input type="checkbox" id="enabled">
+      <span>Intercept downloads</span>
+    </label>
+    <div class="actions">
+      <button id="toggle-all" type="button" disabled>Pause All</button>
+      <a id="open" class="button primary" href="rivulet://open" target="_blank" rel="noopener">Open Rivulet</a>
+    </div>
+  </footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rivulet Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <h1>Rivulet</h1>
+    <p class="subtitle">Send downloads from your browser to aria2.</p>
+
+    <form id="form" novalidate>
+      <section class="group">
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">Intercept downloads</span>
+            <span class="hint">When off, the browser handles every download itself.</span>
+          </span>
+          <input type="checkbox" id="enabled">
+        </label>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">Notify when a download is sent</span>
+            <span class="hint">Errors are always reported.</span>
+          </span>
+          <input type="checkbox" id="notifyOnSend">
+        </label>
+      </section>
+
+      <h2>aria2 connection</h2>
+      <section class="group">
+        <label class="row field">
+          <span class="row-title">RPC URL</span>
+          <input type="url" id="rpcUrl" placeholder="http://localhost:6800/jsonrpc" spellcheck="false" autocomplete="off">
+        </label>
+        <label class="row field">
+          <span class="row-title">Secret</span>
+          <input type="password" id="secret" placeholder="rpc-secret (optional)" autocomplete="off">
+        </label>
+        <label class="row field">
+          <span class="row-title">Download folder</span>
+          <input type="text" id="downloadDir" placeholder="Leave empty to use the aria2 default" spellcheck="false" autocomplete="off">
+        </label>
+        <div class="row">
+          <button type="button" id="test">Test Connection</button>
+          <span id="test-result" class="result" role="status"></span>
+        </div>
+      </section>
+
+      <h2>Filters</h2>
+      <section class="group">
+        <label class="row field">
+          <span class="row-title">Minimum size (MB)</span>
+          <input type="number" id="minSizeMb" min="0" step="any" placeholder="0">
+          <span class="hint">Smaller files stay with the browser. Unknown sizes are always sent.</span>
+        </label>
+        <label class="row field">
+          <span class="row-title">Only these extensions</span>
+          <input type="text" id="includeExtensions" placeholder="zip, iso, dmg, mkv (empty means all)" spellcheck="false" autocomplete="off">
+        </label>
+        <label class="row field">
+          <span class="row-title">Never intercept these sites</span>
+          <textarea id="excludeSites" rows="3" placeholder="One hostname per line or comma separated. Subdomains match." spellcheck="false"></textarea>
+          <span class="hint">Matches the file host and the page that started the download.</span>
+        </label>
+      </section>
+
+      <div class="save-row">
+        <button type="submit" class="primary" id="save">Save</button>
+        <span id="save-result" class="result" role="status"></span>
+      </div>
+    </form>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

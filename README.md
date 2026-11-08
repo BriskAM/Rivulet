@@ -15,6 +15,7 @@ first launch needs one extra step.
 
 ```sh
 brew tap BriskAM/rivulet
+brew trust BriskAM/rivulet     # newer Homebrew versions refuse untrusted third party taps
 brew install --cask rivulet
 ```
 
